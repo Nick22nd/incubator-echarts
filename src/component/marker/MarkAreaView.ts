@@ -241,16 +241,57 @@ class MarkAreaView extends MarkerView {
 
         // Line data for tooltip and formatter
         maModel.setData(areaData);
-
         // Update visual and layout of line
         areaData.each(function (idx) {
             // Layout
             const points = map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
             });
+            console.log('debug point start: ', idx);
+            console.log(points);
+            let pXMax: number;
+            let pXMin: number;
+            let pYMax: number;
+            let pYMin: number;
+            points.forEach((val, index) => {
+                if (index === 0) {
+                    pXMax = val[0];
+                    pXMin = val[0];
+                    pYMin = val[1];
+                    pYMax = val[1];
+                }
+                else {
+                    Math.max(pXMax, val[0]);
+                    Math.min(pXMin, val[0]);
+                    Math.max(pYMax, val[1]);
+                    Math.min(pYMin, val[1]);
+                }
+            });
+            const xAxis = coordSys.getAxis('x').scale.getExtent();
+            const yAxis = coordSys.getAxis('y').scale.getExtent();
+            // const xAxis = coordSys.getAxis('x').getExtent();
+            // const yAxis = coordSys.getAxis('y').getExtent();
+            const xAxisMin = Math.min(xAxis[0], xAxis[1]);
+            const xAxisMax = Math.max(xAxis[0], xAxis[1]);
+
+            const yAxisMin = Math.min(yAxis[0], yAxis[1]);
+            const yAxisMax = Math.max(yAxis[0], yAxis[1]);
+            const hasInsersection = !(pXMax > xAxisMin || pXMin > xAxisMax || pYMax > yAxisMin || pYMin > yAxisMax);
+            console.log(xAxis, yAxis);
+            console.log(`xMin: ${xAxisMin}, xMax: ${xAxisMax}, yMin: ${yAxisMin}, yMax: ${yAxisMax}`);
+            console.log('ans: ', hasInsersection);
+            // console.log(xAxisMin, xAxisMax, yAxisMax, yAxisMin);
+
             // If none of the area is inside coordSys, allClipped is set to be true
             // in layout so that label will not be displayed. See #12591
             let allClipped = true;
+            dimPermutations.forEach((dim, index) => {
+                const xValue = areaData.get(dim[0], idx);
+                const yValue = areaData.get(dim[1], idx);
+                console.log(`index: ${index}, xValue: ${xValue}, yValue: ${yValue}`);
+                console.log(`index: ${index}, xValue: ${coordSys.getAxis('x').scale.parse(xValue)}, \
+                yValue: ${coordSys.getAxis('y').scale.parse(yValue)}`);
+            });
             each(dimPermutations, function (dim) {
                 if (!allClipped) {
                     return;
