@@ -295,23 +295,39 @@ class MarkAreaView extends MarkerView {
             console.log('ans: ', hasInsersection);
             // console.log(xAxisMin, xAxisMax, yAxisMax, yAxisMin);
 
+            //new fix
+            let xPointMin = Infinity;
+            let xPointMax = -Infinity;
+            let yPointMin = Infinity;
+            let yPointMax = -Infinity;
+            each(dimPermutations, function (dim) {
+                const xPoint = coordSys.getAxis('x').scale.parse(areaData.get(dim[0], idx));
+                const yPoint = coordSys.getAxis('y').scale.parse(areaData.get(dim[1], idx));
+                xPointMin = Math.min(xPoint, xPointMin);
+                xPointMax = Math.max(xPoint, xPointMax);
+                yPointMin = Math.min(yPoint, yPointMin);
+                yPointMax = Math.max(yPoint, yPointMax);
+            });
+            const isInsersect = !(xAxis[0] > xPointMax || xAxis[1] < xPointMin
+                                || yAxis[0] > yPointMax || yAxis[1] < yPointMin);
+            let allClipped = !isInsersect;
             // If none of the area is inside coordSys, allClipped is set to be true
             // in layout so that label will not be displayed. See #12591
-            let allClipped = true;
-            each(dimPermutations, function (dim) {
-                if (!allClipped) {
-                    return;
-                }
-                const xValue = areaData.get(dim[0], idx);
-                const yValue = areaData.get(dim[1], idx);
-                // If is infinity, the axis should be considered not clipped
-                if (((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
-                    && (isInifinity(yValue) || coordSys.getAxis('y').containData(yValue))
-                    || hasInsersection)
-                ) {
-                    allClipped = false;
-                }
-            });
+            // let allClipped = true;
+            // each(dimPermutations, function (dim) {
+            //     if (!allClipped) {
+            //         return;
+            //     }
+            //     const xValue = areaData.get(dim[0], idx);
+            //     const yValue = areaData.get(dim[1], idx);
+            //     // If is infinity, the axis should be considered not clipped
+            //     if (((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
+            //         && (isInifinity(yValue) || coordSys.getAxis('y').containData(yValue))
+            //         || hasInsersection)
+            //     ) {
+            //         allClipped = false;
+            //     }
+            // });
             areaData.setItemLayout(idx, {
                 points: points,
                 allClipped: allClipped
