@@ -249,24 +249,35 @@ class MarkAreaView extends MarkerView {
             });
             console.log('debug point start: ', idx);
             console.log(points);
-            let pXMax: number;
-            let pXMin: number;
-            let pYMax: number;
-            let pYMin: number;
-            points.forEach((val, index) => {
+            let pXMax: any;
+            let pXMin: any;
+            let pYMax: any;
+            let pYMin: any;
+            dimPermutations.forEach((dim, index) => {
+                const xValue = areaData.get(dim[0], idx);
+                const yValue = areaData.get(dim[1], idx);
+                // console.log(`index: ${index}, xValue: ${xValue}, yValue: ${yValue}`);
+                // console.log(`index: ${index}, xValue: ${coordSys.getAxis('x').scale.parse(xValue)}, \
+                // yValue: ${coordSys.getAxis('y').scale.parse(yValue)}`);
+            });
+            dimPermutations.forEach((val, index) => {
+                let v0 = coordSys.getAxis('x').scale.parse(areaData.get(val[0], idx));
+                let v1 = coordSys.getAxis('y').scale.parse(areaData.get(val[1], idx));
+                console.log('index: ' + index + ' v0 : ' + v0 + ' v1: ' + v1);
                 if (index === 0) {
-                    pXMax = val[0];
-                    pXMin = val[0];
-                    pYMin = val[1];
-                    pYMax = val[1];
+                    pXMax = v0;
+                    pXMin = v0;
+                    pYMin = v1;
+                    pYMax = v1;
                 }
                 else {
-                    Math.max(pXMax, val[0]);
-                    Math.min(pXMin, val[0]);
-                    Math.max(pYMax, val[1]);
-                    Math.min(pYMin, val[1]);
+                    pXMax = Math.max(pXMax, v0);
+                    pXMin = Math.min(pXMin, v0);
+                    pYMax = Math.max(pYMax, v1);
+                    pYMin = Math.min(pYMin, v1);
                 }
             });
+            // to delete Axis value compare, it's always in increase order
             const xAxis = coordSys.getAxis('x').scale.getExtent();
             const yAxis = coordSys.getAxis('y').scale.getExtent();
             // const xAxis = coordSys.getAxis('x').getExtent();
@@ -276,22 +287,17 @@ class MarkAreaView extends MarkerView {
 
             const yAxisMin = Math.min(yAxis[0], yAxis[1]);
             const yAxisMax = Math.max(yAxis[0], yAxis[1]);
-            const hasInsersection = !(pXMax > xAxisMin || pXMin > xAxisMax || pYMax > yAxisMin || pYMin > yAxisMax);
+            const hasInsersection = !(pXMax < xAxisMin || pXMin > xAxisMax || pYMax < yAxisMin
+                                || pYMin > yAxisMax);
             console.log(xAxis, yAxis);
-            console.log(`xMin: ${xAxisMin}, xMax: ${xAxisMax}, yMin: ${yAxisMin}, yMax: ${yAxisMax}`);
+            console.log(`Axis xMin: ${xAxisMin}, xMax: ${xAxisMax}, yMin: ${yAxisMin}, yMax: ${yAxisMax}`);
+            console.log(`Point xMin: ${pXMin}, xMax: ${pXMax}, yMin: ${pYMin}, yMax: ${pYMax}`);
             console.log('ans: ', hasInsersection);
             // console.log(xAxisMin, xAxisMax, yAxisMax, yAxisMin);
 
             // If none of the area is inside coordSys, allClipped is set to be true
             // in layout so that label will not be displayed. See #12591
             let allClipped = true;
-            dimPermutations.forEach((dim, index) => {
-                const xValue = areaData.get(dim[0], idx);
-                const yValue = areaData.get(dim[1], idx);
-                console.log(`index: ${index}, xValue: ${xValue}, yValue: ${yValue}`);
-                console.log(`index: ${index}, xValue: ${coordSys.getAxis('x').scale.parse(xValue)}, \
-                yValue: ${coordSys.getAxis('y').scale.parse(yValue)}`);
-            });
             each(dimPermutations, function (dim) {
                 if (!allClipped) {
                     return;
@@ -299,8 +305,9 @@ class MarkAreaView extends MarkerView {
                 const xValue = areaData.get(dim[0], idx);
                 const yValue = areaData.get(dim[1], idx);
                 // If is infinity, the axis should be considered not clipped
-                if ((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
+                if (((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
                     && (isInifinity(yValue) || coordSys.getAxis('y').containData(yValue))
+                    || hasInsersection)
                 ) {
                     allClipped = false;
                 }
