@@ -308,9 +308,19 @@ class MarkAreaView extends MarkerView {
                 yPointMin = Math.min(yPoint, yPointMin);
                 yPointMax = Math.max(yPoint, yPointMax);
             });
-            const isInsersect = !(xAxis[0] > xPointMax || xAxis[1] < xPointMin
-                                || yAxis[0] > yPointMax || yAxis[1] < yPointMin);
-            let allClipped = !isInsersect;
+            // const isInsersect = !(xAxis[0] > xPointMax || xAxis[1] < xPointMin
+            //     || yAxis[0] > yPointMax || yAxis[1] < yPointMin);
+            // let allClipped = !isInsersect;
+            // second version fix
+            const xPoint = [coordSys.getAxis('x').scale.parse(areaData.get('x0', idx)),
+                                coordSys.getAxis('x').scale.parse(areaData.get('x1', idx))];
+            const yPoint = [coordSys.getAxis('y').scale.parse(areaData.get('y0', idx)),
+                                coordSys.getAxis('y').scale.parse(areaData.get('y1', idx))];
+            xPoint.sort();
+            yPoint.sort();
+            const overlapped = !(xAxis[0] > xPoint[1] || xAxis[1] < xPoint[0]
+                                || yAxis[0] > yPoint[1] || yAxis[1] < yPoint[0]);
+            const allClipped = !overlapped;
             // If none of the area is inside coordSys, allClipped is set to be true
             // in layout so that label will not be displayed. See #12591
             // let allClipped = true;
